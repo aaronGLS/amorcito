@@ -15,22 +15,36 @@ export function initIntroSequence() {
   }
 
   setTimeout(() => {
-    // Esconder texto
+    // Esconder texto con transición suave y luego mostrar el corazón
     if (instructionEl) {
-      instructionEl.style.opacity = "0";
+      // Asegurar que la transición esté aplicada ANTES de cambiar la opacidad
       instructionEl.style.transition = "opacity 800ms ease";
 
-      setTimeout(() => {
+      const onFadeOutEnd = () => {
         instructionEl.style.display = "none";
-      }, 800);
-    }
+        heartSVG.style.opacity = "1"; // Ahora sí, aparece el corazón
+        state.isInteractable = true;
+      };
 
-    // Mostrar corazón
-    setTimeout(() => {
+      // Fallback por si no dispara transitionend (por ejemplo, navegadores raros)
+      const fallbackId = setTimeout(onFadeOutEnd, 820);
+
+      const handler = (ev) => {
+        if (ev.propertyName !== "opacity") return;
+        clearTimeout(fallbackId);
+        instructionEl.removeEventListener("transitionend", handler);
+        onFadeOutEnd();
+      };
+      instructionEl.addEventListener("transitionend", handler);
+
+      // Disparar el fade-out
+      requestAnimationFrame(() => {
+        instructionEl.style.opacity = "0";
+      });
+    } else {
+      // Si no hay instrucción, simplemente mostrar el corazón
       heartSVG.style.opacity = "1";
-      state.isInteractable = true; // Habilitar interacción inmediatamente
-      // console.log('Corazón visible e interacción habilitada');
-    }, 200);
+      state.isInteractable = true;
+    }
   }, 2000);
 }
-
