@@ -21,6 +21,8 @@ let clicks = 0;
 let totalLength = 0;       // Longitud total del contorno SVG
 let heartPath2D = null;    // Geometría para hit-test en canvas
 let isInteractable = false; // Controla si se procesan los clics (Estado 3)
+let fillFraction = 0;      // 0..1 altura de líquido dentro del corazón
+let liquidRect = null;     // <rect> que se recorta con el corazón
 
 // Tamaño actual de la escena
 let vw = window.innerWidth;
@@ -99,16 +101,18 @@ function resizeAll() {
   heartPath.setAttribute('d', d);
   heartClipPath.setAttribute('d', d);
 
-  // Longitud total del contorno (para stroke-dasharray/offset)
-  totalLength = heartPath.getTotalLength();
-  heartPath.style.strokeDasharray = `${totalLength}`;
-
-  // Mantener el mismo progreso relativo tras resize, sin animación inicial
-  const fraction = Math.min(1, clicks / TARGET_CLICKS);
-  setProgress(fraction, { immediate: true });
+  // Longitud del contorno (ya no se usa como progreso, dejamos el trazo completo)
+  try {
+    totalLength = heartPath.getTotalLength();
+  } catch (_) {}
+  heartPath.style.strokeDasharray = 'none';
+  heartPath.style.strokeDashoffset = '0';
 
   // Path2D para hit testing del clic en el canvas
   heartPath2D = new Path2D(d);
+  // Ajustar capa de líquido
+  ensureLiquidLayer();
+  updateLiquidRect();
 }
 
 // Dibuja un trazo acuarela: 5-8 círculos con tamaño/opacidad/offset aleatorios
@@ -140,7 +144,6 @@ function handlePointer(e) {
   if (!heartPath2D) return;
   // Verificar que el clic está dentro del corazón
   if (paintingCtx.isPointInPath(heartPath2D, x, y)) {
-    paintAt(x, y);
 
     // Sonido suave por cada clic válido
     if (chimeAudio) {
@@ -149,12 +152,10 @@ function handlePointer(e) {
       chimeAudio.play().catch(() => {});
     }
 
-    // Avanzar progreso de contorno
-    if (clicks < TARGET_CLICKS) {
-      clicks += 1;
-      const fraction = Math.min(1, clicks / TARGET_CLICKS);
-      setProgress(fraction);
-    }
+    // Avanzar “llenado” como líquido (rectángulo que sube)
+    clicks += 1;
+    fillFraction = Math.min(1, clicks / TARGET_CLICKS);
+    updateLiquidRect();
   }
 }
 
@@ -172,6 +173,12 @@ function initIntroSequence() {
   setTimeout(() => {
     // Transición: desvanecer texto
     if (instructionEl) {
+      // Cancelar animación de entrada para que la transición funcione
+      instructionEl.style.animation = 'none';
+      // Asegura estado visible antes de transicionar a 0
+      instructionEl.style.opacity = '1';
+      // Forzar reflow
+      void instructionEl.offsetWidth;
       instructionEl.classList.add('fade-out');
       const onEnd = (ev) => {
         if (ev.propertyName === 'opacity') {
@@ -284,4 +291,57 @@ function setProgress(fraction, opts = {}) {
   } else {
     heartPath.style.strokeDashoffset = `${offset}`;
   }
+}
+
+// ------------------------------
+// Capa de “líquido” dentro del corazón
+// ------------------------------
+function ensureLiquidLayer() {
+  // Crear rectángulo y gradiente si no existen
+  const defs = heartSVG.querySelector('defs');
+  if (defs && !heartSVG.querySelector('#liquid-grad')) {
+    const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    grad.setAttribute('id', 'liquid-grad');
+    grad.setAttribute('x1', '0%');
+    grad.setAttribute('y1', '100%');
+    grad.setAttribute('x2', '0%');
+    grad.setAttribute('y2', '0%');
+    const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop1.setAttribute('offset', '0%');
+    stop1.setAttribute('stop-color', '#f4acb7');
+    stop1.setAttribute('stop-opacity', '0.9');
+    const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop2.setAttribute('offset', '100%');
+    stop2.setAttribute('stop-color', '#e5b299');
+    stop2.setAttribute('stop-opacity', '0.9');
+    grad.appendChild(stop1);
+    grad.appendChild(stop2);
+    defs.appendChild(grad);
+  }
+
+  if (!liquidRect) {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('id', 'liquid-group');
+    g.setAttribute('clip-path', 'url(#heart-clip)');
+    liquidRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    liquidRect.setAttribute('id', 'liquid-rect');
+    liquidRect.setAttribute('x', '0');
+    liquidRect.setAttribute('fill', 'url(#liquid-grad)');
+    g.appendChild(liquidRect);
+    // Insertar debajo del trazo para que el contorno quede encima
+    if (heartPath && heartPath.parentNode) {
+      heartSVG.insertBefore(g, heartPath);
+    } else {
+      heartSVG.appendChild(g);
+    }
+  }
+}
+
+function updateLiquidRect() {
+  if (!liquidRect) return;
+  // El rectángulo ocupa todo el ancho del viewBox y sube desde abajo
+  liquidRect.setAttribute('width', String(vw));
+  const height = Math.max(0, vh * fillFraction);
+  liquidRect.setAttribute('height', String(height));
+  liquidRect.setAttribute('y', String(vh - height));
 }
