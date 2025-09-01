@@ -69,10 +69,30 @@ function resizeAll() {
 }
 
 // Maneja clicks para llenar el corazón
+function isClickInsideHeart(e) {
+  if (!heartSVG || !heartPath) return false;
+  const pt = heartSVG.createSVGPoint();
+  pt.x = e.clientX;
+  pt.y = e.clientY;
+  const ctm = heartPath.getScreenCTM();
+  if (!ctm || !ctm.inverse) return false;
+  const local = pt.matrixTransform(ctm.inverse());
+  if (typeof heartPath.isPointInFill === 'function') {
+    return heartPath.isPointInFill(local) || heartPath.isPointInStroke(local);
+  }
+  const bbox = heartPath.getBBox();
+  return (
+    local.x >= bbox.x &&
+    local.x <= bbox.x + bbox.width &&
+    local.y >= bbox.y &&
+    local.y <= bbox.y + bbox.height
+  );
+}
 function handlePointer(e) {
   console.log('Click detectado, isInteractable:', isInteractable, 'clicks:', clicks);
   
   if (!isInteractable) return;
+  if (!isClickInsideHeart(e)) return;
   
   // Sonido por cada clic
   if (chimeAudio) {
@@ -81,7 +101,7 @@ function handlePointer(e) {
   }
 
   // Incrementar llenado
-  clicks += 1;
+  clicks += 2;
   fillFraction = Math.min(1, clicks / TARGET_CLICKS);
   updateLiquidRect();
   
@@ -98,6 +118,11 @@ function handlePointer(e) {
 // Inicialización
 function initIntroSequence() {
   resizeAll();
+  // Prefill mínimo para que el llenado sea visible desde el primer clic
+  if (fillFraction === 0) {
+    fillFraction = 0.01;
+    updateLiquidRect();
+  }
 
   setTimeout(() => {
     // Esconder texto
@@ -256,7 +281,7 @@ const firefliesSketch = (s) => {
 // Event listeners
 window.addEventListener('resize', resizeAll);
 // Solo contar clics sobre la forma del corazón
-heartPath.addEventListener('click', handlePointer);
+heartSVG.addEventListener('click', handlePointer);
 document.addEventListener('DOMContentLoaded', initIntroSequence);
 
 // Inicializar p5.js
