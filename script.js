@@ -255,7 +255,8 @@ const firefliesSketch = (s) => {
 
 // Event listeners
 window.addEventListener('resize', resizeAll);
-heartSVG.addEventListener('click', handlePointer);
+// Solo contar clics sobre la forma del corazón
+heartPath.addEventListener('click', handlePointer);
 document.addEventListener('DOMContentLoaded', initIntroSequence);
 
 // Inicializar p5.js

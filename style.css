@@ -37,7 +37,6 @@ body { font-family: 'Cormorant Garamond', serif; overflow: hidden; }
   z-index: 2;
   opacity: 0; /* Estado 1: oculto al inicio */
   transition: opacity 1000ms ease; /* Transición de revelado */
-  cursor: pointer; /* Indica que es clickeable */
 }
 
 /* Estilo del contorno con brillo y transición del progreso */
@@ -49,6 +48,7 @@ body { font-family: 'Cormorant Garamond', serif; overflow: hidden; }
   stroke-linejoin: round;
   filter: drop-shadow(0 0 12px var(--stroke));
   transition: stroke-dashoffset 600ms ease; /* Progreso suave */
+  cursor: pointer; /* Solo el corazón indica clic */
 }
 
 /* Capa 2: UI – instrucción */
