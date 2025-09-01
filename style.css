@@ -2,9 +2,8 @@
   Fase 1 – Escena interactiva con corazón
   Capas:
     z:1  #background-canvas (p5.js)
-    z:2  #painting-canvas (pinceladas)
-    z:3  #heart-svg (contorno + clipPath)
-    z:4  #instruction (UI)
+    z:2  #heart-svg (líquido + contorno)
+    z:3  #instruction (UI)
 */
 
 :root {
@@ -20,7 +19,6 @@ body { font-family: 'Cormorant Garamond', serif; overflow: hidden; }
 
 /* Capas a pantalla completa */
 #background-canvas,
-#painting-canvas,
 #heart-svg {
   position: fixed;
   top: 0; left: 0;
@@ -34,20 +32,12 @@ body { font-family: 'Cormorant Garamond', serif; overflow: hidden; }
   pointer-events: none; /* No intercepta clics */
 }
 
-/* Capa 1: lienzo de pintura, con el recorte del corazón */
-#painting-canvas {
-  z-index: 2;
-  /* Recorte usando el clipPath del SVG */
-  clip-path: url(#heart-clip);
-  -webkit-clip-path: url(#heart-clip);
-}
-
-/* Capa 2: SVG del contorno del corazón */
+/* Capa 1: SVG del corazón y líquido */
 #heart-svg {
-  z-index: 3;
-  pointer-events: none; /* Deja pasar clics al canvas de abajo */
+  z-index: 2;
   opacity: 0; /* Estado 1: oculto al inicio */
   transition: opacity 1000ms ease; /* Transición de revelado */
+  cursor: pointer; /* Indica que es clickeable */
 }
 
 /* Estilo del contorno con brillo y transición del progreso */
@@ -61,11 +51,11 @@ body { font-family: 'Cormorant Garamond', serif; overflow: hidden; }
   transition: stroke-dashoffset 600ms ease; /* Progreso suave */
 }
 
-/* Capa 3: UI – instrucción */
+/* Capa 2: UI – instrucción */
 #instruction {
   position: fixed;
   inset: 0;
-  z-index: 4;
+  z-index: 3;
   margin: 0;
   display: grid;
   place-items: center;

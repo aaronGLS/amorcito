@@ -1,15 +1,8 @@
-// Fase 1 – Interacción del corazón acuarela + fondo partículas p5
-// Autoría: Implementación enfocada en UX serena y orgánica
-
 'use strict';
 
-// Paleta de acuarela (tonos cálidos)
-const PALETTE = ['#f4acb7', '#e5b299', '#d88c9a', '#f7c8a1'];
 const TARGET_CLICKS = 100; // objetivo de clics
 
 // Referencias de elementos
-const paintingCanvas = document.getElementById('painting-canvas');
-const paintingCtx = paintingCanvas.getContext('2d');
 const heartSVG = document.getElementById('heart-svg');
 const heartPath = document.getElementById('heart-path');
 const heartClipPath = document.getElementById('heart-clip-path');
@@ -18,203 +11,191 @@ const chimeAudio = document.getElementById('chime');
 
 // Estado de progreso
 let clicks = 0;
-let totalLength = 0;       // Longitud total del contorno SVG
-let heartPath2D = null;    // Geometría para hit-test en canvas
-let isInteractable = false; // Controla si se procesan los clics (Estado 3)
-let fillFraction = 0;      // 0..1 altura de líquido dentro del corazón
-let liquidRect = null;     // <rect> que se recorta con el corazón
+let isInteractable = false;
+let fillFraction = 0;
+let liquidRect = null;
 
 // Tamaño actual de la escena
 let vw = window.innerWidth;
 let vh = window.innerHeight;
 
-// Construye una forma de corazón orgánica y ligeramente asimétrica
-// devolviendo un string de path SVG en coordenadas de usuario (px)
+// Construye un corazón perfecto usando la fórmula matemática estándar
 function buildHeartPath(w, h) {
-  const minSide = Math.min(w, h);
-  // Dimensiones del corazón con márgenes respirables
-  const heartW = minSide * 0.70;     // un poco más ancho
-  const heartH = heartW * 0.95;      // un poco más alto para punta más definida
   const cx = w * 0.5;
-  const cy = h * 0.50;               // centrado verticalmente
-
-  const W = heartW;
-  const H = heartH;
-
-  // Anclas principales (asimetría sutil: lóbulo izq. 2% más alto)
-  const Bx = cx;
-  const By = cy + 0.42 * H; // punta inferior
-
-  const LTx = cx - 0.30 * W;
-  const LTy = cy - 0.09 * H; // lóbulo izquierdo
-
-  const RTx = cx + 0.30 * W;
-  const RTy = cy - 0.07 * H; // lóbulo derecho ligeramente más bajo
-
-  const NTx = cx;            // escote superior
-  const NTy = cy - 0.35 * H;
-
-  // Controles cúbicos afinados para evitar bultos en los laterales
-  // Segmento B -> LT
-  const C1x = cx - 0.32 * W, C1y = cy + 0.34 * H;
-  const C2x = cx - 0.62 * W, C2y = cy + 0.02 * H;
-
-  // Segmento LT -> NT
-  const C3x = cx - 0.46 * W, C3y = cy - 0.26 * H;
-  const C4x = cx - 0.12 * W, C4y = cy - 0.44 * H;
-
-  // Segmento NT -> RT
-  const C5x = cx + 0.12 * W, C5y = cy - 0.44 * H;
-  const C6x = cx + 0.46 * W, C6y = cy - 0.26 * H;
-
-  // Segmento RT -> B
-  const C7x = cx + 0.62 * W, C7y = cy + 0.02 * H;
-  const C8x = cx + 0.32 * W, C8y = cy + 0.34 * H;
-
-  const d = [
-    `M ${Bx} ${By}`,
-    `C ${C1x} ${C1y}, ${C2x} ${C2y}, ${LTx} ${LTy}`,
-    `C ${C3x} ${C3y}, ${C4x} ${C4y}, ${NTx} ${NTy}`,
-    `C ${C5x} ${C5y}, ${C6x} ${C6y}, ${RTx} ${RTy}`,
-    `C ${C7x} ${C7y}, ${C8x} ${C8y}, ${Bx} ${By}`,
-    'Z'
-  ].join(' ');
-  return d;
+  const cy = h * 0.5;
+  
+  // Tamaño del corazón
+  const size = Math.min(w, h) * 0.3;
+  
+  // Fórmula matemática para un corazón perfecto
+  const points = [];
+  const numPoints = 100;
+  
+  for (let i = 0; i <= numPoints; i++) {
+    const t = (i / numPoints) * 2 * Math.PI;
+    const x = 16 * Math.pow(Math.sin(t), 3);
+    const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+    
+    // Escalar y centrar
+    const scaledX = cx + (x * size / 16);
+    const scaledY = cy + (y * size / 16);
+    
+    if (i === 0) {
+      points.push(`M ${scaledX} ${scaledY}`);
+    } else {
+      points.push(`L ${scaledX} ${scaledY}`);
+    }
+  }
+  
+  points.push('Z');
+  return points.join(' ');
 }
 
-// Ajusta todos los elementos a tamaño de ventana y sincroniza geometrías
+// Ajusta elementos al tamaño de ventana
 function resizeAll() {
   vw = window.innerWidth;
   vh = window.innerHeight;
 
-  // Lienzo de pintura (1:1 con CSS px para mantener coherencia de coordenadas)
-  paintingCanvas.width = vw;
-  paintingCanvas.height = vh;
-
-  // SVG ocupa todo y usa unidades absolutas para el clip
   heartSVG.setAttribute('width', vw);
   heartSVG.setAttribute('height', vh);
   heartSVG.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
 
-  // Recalcular geometría del corazón
   const d = buildHeartPath(vw, vh);
   heartPath.setAttribute('d', d);
   heartClipPath.setAttribute('d', d);
 
-  // Longitud del contorno (ya no se usa como progreso, dejamos el trazo completo)
-  try {
-    totalLength = heartPath.getTotalLength();
-  } catch (_) {}
-  heartPath.style.strokeDasharray = 'none';
-  heartPath.style.strokeDashoffset = '0';
-
-  // Path2D para hit testing del clic en el canvas
-  heartPath2D = new Path2D(d);
-  // Ajustar capa de líquido
   ensureLiquidLayer();
   updateLiquidRect();
 }
 
-// Dibuja un trazo acuarela: 5-8 círculos con tamaño/opacidad/offset aleatorios
-function paintAt(x, y) {
-  const clusters = Math.floor(Math.random() * 4) + 5; // 5..8
-  const color = PALETTE[Math.floor(Math.random() * PALETTE.length)];
-
-  for (let i = 0; i < clusters; i++) {
-    const r = Math.random() * 22 + 10; // radio 10..32 px
-    const dx = (Math.random() - 0.5) * 24; // dispersión suave
-    const dy = (Math.random() - 0.5) * 24;
-    paintingCtx.globalAlpha = 0.1 + Math.random() * 0.2; // 0.1..0.3
-    paintingCtx.fillStyle = color;
-    paintingCtx.beginPath();
-    paintingCtx.arc(x + dx, y + dy, r, 0, Math.PI * 2);
-    paintingCtx.fill();
-  }
-  // Restaurar opacidad por si otras rutinas dibujan más adelante
-  paintingCtx.globalAlpha = 1.0;
-}
-
-// Maneja un click/pointer: pinta si está dentro del corazón y avanza progreso
+// Maneja clicks para llenar el corazón
 function handlePointer(e) {
-  if (!isInteractable) return; // Estados 1 y 2: sin interacción
-  const rect = paintingCanvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+  console.log('Click detectado, isInteractable:', isInteractable, 'clicks:', clicks);
+  
+  if (!isInteractable) return;
+  
+  // Sonido por cada clic
+  if (chimeAudio) {
+    chimeAudio.currentTime = 0;
+    chimeAudio.play().catch(() => {});
+  }
 
-  if (!heartPath2D) return;
-  // Verificar que el clic está dentro del corazón
-  if (paintingCtx.isPointInPath(heartPath2D, x, y)) {
-
-    // Sonido suave por cada clic válido
-    if (chimeAudio) {
-      // Reinicia para permitir clicks rápidos
-      chimeAudio.currentTime = 0;
-      chimeAudio.play().catch(() => {});
-    }
-
-    // Avanzar “llenado” como líquido (rectángulo que sube)
-    clicks += 1;
-    fillFraction = Math.min(1, clicks / TARGET_CLICKS);
-    updateLiquidRect();
+  // Incrementar llenado
+  clicks += 1;
+  fillFraction = Math.min(1, clicks / TARGET_CLICKS);
+  updateLiquidRect();
+  
+  console.log('Después del click - clicks:', clicks, 'fillFraction:', fillFraction);
+  
+  // Cambiar mensaje cuando esté lleno
+  if (fillFraction === 1) {
+    instructionEl.textContent = "¡El corazón está lleno de amor!";
+    instructionEl.style.display = "grid";
+    instructionEl.style.opacity = "1";
   }
 }
 
-// Listeners
-window.addEventListener('resize', resizeAll);
-paintingCanvas.addEventListener('pointerdown', handlePointer);
-document.addEventListener('DOMContentLoaded', initIntroSequence);
-
-// Inicializar intro por estados cuando el DOM esté listo
+// Inicialización
 function initIntroSequence() {
-  // Preparación de geometrías y tamaños
   resizeAll();
 
-  // Estado 1: Bienvenida durante 2000ms
   setTimeout(() => {
-    // Transición: desvanecer texto
+    // Esconder texto
     if (instructionEl) {
-      // Cancelar animación de entrada para que la transición funcione
-      instructionEl.style.animation = 'none';
-      // Asegura estado visible antes de transicionar a 0
-      instructionEl.style.opacity = '1';
-      // Forzar reflow
-      void instructionEl.offsetWidth;
-      instructionEl.classList.add('fade-out');
-      const onEnd = (ev) => {
-        if (ev.propertyName === 'opacity') {
-          instructionEl.style.display = 'none';
-          instructionEl.removeEventListener('transitionend', onEnd);
-        }
-      };
-      instructionEl.addEventListener('transitionend', onEnd);
+      instructionEl.style.opacity = '0';
+      instructionEl.style.transition = 'opacity 800ms ease';
+      
+      setTimeout(() => {
+        instructionEl.style.display = 'none';
+      }, 800);
     }
 
-    // 200ms después, revelar el corazón
+    // Mostrar corazón
     setTimeout(() => {
       heartSVG.style.opacity = '1';
-      const onHeartShown = (ev) => {
-        if (ev.propertyName === 'opacity') {
-          isInteractable = true; // Estado 3: interacción habilitada
-          heartSVG.removeEventListener('transitionend', onHeartShown);
-        }
-      };
-      heartSVG.addEventListener('transitionend', onHeartShown);
+      isInteractable = true; // Habilitar interacción inmediatamente
+      console.log('Corazón visible e interacción habilitada');
     }, 200);
   }, 2000);
 }
 
-// ------------------------------
-// Fondo de partículas (p5.js)
-// ------------------------------
+// Crear capa de líquido
+function ensureLiquidLayer() {
+  const defs = heartSVG.querySelector('defs');
+  if (defs && !heartSVG.querySelector('#liquid-grad')) {
+    const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    grad.setAttribute('id', 'liquid-grad');
+    grad.setAttribute('x1', '0%');
+    grad.setAttribute('y1', '100%');
+    grad.setAttribute('x2', '0%');
+    grad.setAttribute('y2', '0%');
+    
+    const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop1.setAttribute('offset', '0%');
+    stop1.setAttribute('stop-color', '#f4acb7');
+    stop1.setAttribute('stop-opacity', '0.9');
+    
+    const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop2.setAttribute('offset', '100%');
+    stop2.setAttribute('stop-color', '#e5b299');
+    stop2.setAttribute('stop-opacity', '0.9');
+    
+    grad.appendChild(stop1);
+    grad.appendChild(stop2);
+    defs.appendChild(grad);
+  }
 
+  if (!liquidRect) {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('id', 'liquid-group');
+    g.setAttribute('clip-path', 'url(#heart-clip)');
+    
+    liquidRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    liquidRect.setAttribute('id', 'liquid-rect');
+    liquidRect.setAttribute('x', '0');
+    liquidRect.setAttribute('fill', 'url(#liquid-grad)');
+    liquidRect.style.transition = 'height 0.3s ease, y 0.3s ease';
+    
+    g.appendChild(liquidRect);
+    heartSVG.insertBefore(g, heartPath);
+  }
+}
+
+// Actualizar rectángulo de líquido
+function updateLiquidRect() {
+  if (!liquidRect || !heartPath) return;
+
+  // Usar el bounding box real del corazón para que el llenado
+  // empiece desde la base del corazón (no desde el borde de la ventana).
+  let bbox;
+  try {
+    bbox = heartPath.getBBox();
+  } catch (e) {
+    // Si aún no está listo el path, usar viewport como respaldo
+    bbox = { x: 0, y: 0, width: vw, height: vh };
+  }
+
+  const width = Math.max(0, bbox.width);
+  const totalHeight = Math.max(0, bbox.height);
+  const filledHeight = Math.max(0, totalHeight * fillFraction);
+
+  liquidRect.setAttribute('x', String(bbox.x));
+  liquidRect.setAttribute('width', String(width));
+  liquidRect.setAttribute('height', String(filledHeight));
+  // Colocar el rectángulo desde la base del corazón hacia arriba
+  liquidRect.setAttribute('y', String(bbox.y + totalHeight - filledHeight));
+}
+
+// Fondo de partículas con p5.js
 const firefliesSketch = (s) => {
-  const COUNT = 60; // 50-70
+  const COUNT = 60;
   let particles = [];
 
   class Particle {
     constructor() {
       this.reset(true);
     }
+    
     reset(spawnAnywhere = false) {
       this.r = s.random(1.4, 3.2);
       this.speed = s.random(0.08, 0.20);
@@ -223,24 +204,24 @@ const firefliesSketch = (s) => {
       this.vy = Math.sin(angle) * this.speed;
       this.x = spawnAnywhere ? s.random(s.width) : (this.vx > 0 ? 0 : s.width);
       this.y = spawnAnywhere ? s.random(s.height) : s.random(s.height);
-      this.flicker = s.random(0.4, 0.9); // brillo base
+      this.flicker = s.random(0.4, 0.9);
     }
+    
     step() {
       this.x += this.vx;
       this.y += this.vy;
-      // Reaparece por el borde opuesto
       if (this.x < 0) this.x = s.width;
       if (this.x > s.width) this.x = 0;
       if (this.y < 0) this.y = s.height;
       if (this.y > s.height) this.y = 0;
     }
+    
     draw() {
-      // Dorado pálido con leve parpadeo
-      const base = 235; // alpha base 0..255
+      const base = 235;
       const twinkle = Math.sin((s.frameCount + this.x * 0.3) * 0.02) * 30;
       const a = s.constrain(base * this.flicker + twinkle, 120, 255);
       s.noStroke();
-      s.fill(253, 235, 208, a); // #fdebd0 con alpha
+      s.fill(253, 235, 208, a);
       s.circle(this.x, this.y, this.r * 2);
     }
   }
@@ -248,7 +229,6 @@ const firefliesSketch = (s) => {
   s.setup = () => {
     const cnv = s.createCanvas(window.innerWidth, window.innerHeight);
     cnv.id('background-canvas');
-    // Asegura capa/fijación al fondo
     cnv.style('position', 'fixed');
     cnv.style('top', '0');
     cnv.style('left', '0');
@@ -265,7 +245,6 @@ const firefliesSketch = (s) => {
   };
 
   s.draw = () => {
-    // Fondo oscuro y sereno (#1a1a2e)
     s.background(26, 26, 46);
     for (const p of particles) {
       p.step();
@@ -274,74 +253,10 @@ const firefliesSketch = (s) => {
   };
 };
 
+// Event listeners
+window.addEventListener('resize', resizeAll);
+heartSVG.addEventListener('click', handlePointer);
+document.addEventListener('DOMContentLoaded', initIntroSequence);
+
+// Inicializar p5.js
 new p5(firefliesSketch);
-
-// ------------------------------
-// Utilidad: fijar progreso del contorno con/ sin transición
-// ------------------------------
-function setProgress(fraction, opts = {}) {
-  const offset = (1 - fraction) * totalLength;
-  if (opts.immediate) {
-    const prev = heartPath.style.transition;
-    heartPath.style.transition = 'none';
-    heartPath.style.strokeDashoffset = `${offset}`;
-    // Forzar reflow para aplicar inmediatamente sin animar
-    void heartPath.getBoundingClientRect();
-    heartPath.style.transition = prev || '';
-  } else {
-    heartPath.style.strokeDashoffset = `${offset}`;
-  }
-}
-
-// ------------------------------
-// Capa de “líquido” dentro del corazón
-// ------------------------------
-function ensureLiquidLayer() {
-  // Crear rectángulo y gradiente si no existen
-  const defs = heartSVG.querySelector('defs');
-  if (defs && !heartSVG.querySelector('#liquid-grad')) {
-    const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
-    grad.setAttribute('id', 'liquid-grad');
-    grad.setAttribute('x1', '0%');
-    grad.setAttribute('y1', '100%');
-    grad.setAttribute('x2', '0%');
-    grad.setAttribute('y2', '0%');
-    const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-    stop1.setAttribute('offset', '0%');
-    stop1.setAttribute('stop-color', '#f4acb7');
-    stop1.setAttribute('stop-opacity', '0.9');
-    const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-    stop2.setAttribute('offset', '100%');
-    stop2.setAttribute('stop-color', '#e5b299');
-    stop2.setAttribute('stop-opacity', '0.9');
-    grad.appendChild(stop1);
-    grad.appendChild(stop2);
-    defs.appendChild(grad);
-  }
-
-  if (!liquidRect) {
-    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    g.setAttribute('id', 'liquid-group');
-    g.setAttribute('clip-path', 'url(#heart-clip)');
-    liquidRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    liquidRect.setAttribute('id', 'liquid-rect');
-    liquidRect.setAttribute('x', '0');
-    liquidRect.setAttribute('fill', 'url(#liquid-grad)');
-    g.appendChild(liquidRect);
-    // Insertar debajo del trazo para que el contorno quede encima
-    if (heartPath && heartPath.parentNode) {
-      heartSVG.insertBefore(g, heartPath);
-    } else {
-      heartSVG.appendChild(g);
-    }
-  }
-}
-
-function updateLiquidRect() {
-  if (!liquidRect) return;
-  // El rectángulo ocupa todo el ancho del viewBox y sube desde abajo
-  liquidRect.setAttribute('width', String(vw));
-  const height = Math.max(0, vh * fillFraction);
-  liquidRect.setAttribute('height', String(height));
-  liquidRect.setAttribute('y', String(vh - height));
-}

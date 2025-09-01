@@ -12,10 +12,7 @@
   <body>
     <!-- Capa 0: p5 creará el canvas de fondo y le asignará id="background-canvas" -->
 
-    <!-- Capa 1: Canvas de pintura dentro del corazón -->
-    <canvas id="painting-canvas"></canvas>
-
-    <!-- Capa 2: SVG del corazón con máscara y contorno -->
+    <!-- Capa 1: SVG del corazón con líquido y contorno -->
     <svg id="heart-svg" aria-hidden="true" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
       <defs>
         <clipPath id="heart-clip" clipPathUnits="userSpaceOnUse">
@@ -23,11 +20,11 @@
           <path id="heart-clip-path" d="" />
         </clipPath>
       </defs>
-      <!-- Path visible del corazón; su longitud se usa para la barra de progreso -->
+      <!-- Path visible del corazón -->
       <path id="heart-path" d="" />
     </svg>
 
-    <!-- Capa 3: UI / Instrucción -->
+    <!-- Capa 2: UI / Instrucción -->
     <h1 id="instruction">Para cultivar un jardín, primero hay que llenar un corazón.</h1>
 
     <!-- Audio del click válido (campanilla breve). Puedes sustituir la fuente si prefieres otro tono. -->
