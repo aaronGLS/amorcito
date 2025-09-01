@@ -1,0 +1,95 @@
+/*
+  Fase 1 – Escena interactiva con corazón
+  Capas:
+    z:1  #background-canvas (p5.js)
+    z:2  #painting-canvas (pinceladas)
+    z:3  #heart-svg (contorno + clipPath)
+    z:4  #instruction (UI)
+*/
+
+:root {
+  --bg: #1a1a2e;           /* Oscuro cálido */
+  --stroke: #e5b299;       /* Dorado rosado */
+  --text: #f0f0f0;         /* Blanco suave */
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+html, body { margin: 0; padding: 0; background: var(--bg); }
+body { font-family: 'Cormorant Garamond', serif; overflow: hidden; }
+
+/* Capas a pantalla completa */
+#background-canvas,
+#painting-canvas,
+#heart-svg {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  display: block;
+}
+
+/* Capa 0: p5 canvas se crea en JS pero lo estilamos aquí */
+#background-canvas {
+  z-index: 1;
+  pointer-events: none; /* No intercepta clics */
+}
+
+/* Capa 1: lienzo de pintura, con el recorte del corazón */
+#painting-canvas {
+  z-index: 2;
+  /* Recorte usando el clipPath del SVG */
+  clip-path: url(#heart-clip);
+  -webkit-clip-path: url(#heart-clip);
+}
+
+/* Capa 2: SVG del contorno del corazón */
+#heart-svg {
+  z-index: 3;
+  pointer-events: none; /* Deja pasar clics al canvas de abajo */
+  opacity: 0; /* Estado 1: oculto al inicio */
+  transition: opacity 1000ms ease; /* Transición de revelado */
+}
+
+/* Estilo del contorno con brillo y transición del progreso */
+#heart-svg #heart-path {
+  fill: transparent;
+  stroke: var(--stroke);
+  stroke-width: 3.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 12px var(--stroke));
+  transition: stroke-dashoffset 600ms ease; /* Progreso suave */
+}
+
+/* Capa 3: UI – instrucción */
+#instruction {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 0 6vw;
+  color: var(--text);
+  font-size: clamp(20px, 4vw, 42px);
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+  opacity: 0;
+  animation: fadeIn 900ms ease forwards 200ms; /* 0->1 al cargar */
+  pointer-events: none; /* No bloquea clics */
+}
+
+/* Suavizado del fade-out tras primer clic */
+#instruction.fade-out {
+  opacity: 0;
+  transition: opacity 800ms ease; /* Suave y coordinado con el corazón */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Selección de texto deshabilitada para sensación más inmersiva (opcional) */
+body, #instruction { user-select: none; }
