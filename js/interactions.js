@@ -4,6 +4,7 @@ import { heartSVG, heartPath, instructionEl } from "./dom.js";
 import { state } from "./state.js";
 import { updateLiquidRect } from "./liquid.js";
 import { playChime } from "./audio.js";
+import { startPhase2 } from "./phase2.js";
 
 export function isClickInsideHeart(e) {
   if (!heartSVG || !heartPath) return false;
@@ -39,6 +40,11 @@ export function handlePointer(e) {
     instructionEl.textContent = "¡El corazón está lleno de amor!";
     instructionEl.style.display = "grid";
     instructionEl.style.opacity = "1";
+    
+    // Iniciar la transición a la Fase 2 después de un breve momento
+    setTimeout(() => {
+      startPhase2();
+    }, 3000); // Esperar 3 segundos para que el usuario lea el mensaje
   }
 }
 

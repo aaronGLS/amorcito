@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jardín en el Corazón — Fase 1</title>
+    <title>Jardín en el Corazón — Una Historia de Amor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
@@ -32,6 +32,129 @@
       <source src="https://cdn.pixabay.com/download/audio/2022/02/23/audio_4fcf5ada10.mp3?filename=bell-soft-99675.mp3" type="audio/mpeg" />
     </audio>
 
+    <!-- SVG del Jardín (Fase 2) - Inicialmente oculto -->
+    <svg id="garden-svg" style="opacity: 0;" width="100%" height="100%" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
+      <!-- Tierra -->
+      <path id="tierra" d="M 50 550 Q 200 520 400 540 Q 600 520 750 550 L 750 580 L 50 580 Z" 
+            fill="#8B4513" stroke="#654321" stroke-width="2"/>
+      
+      <!-- Tallo principal -->
+      <path id="tallo" d="M 400 540 Q 405 480 390 420 Q 395 360 400 300 Q 398 240 402 180 Q 405 120 400 60" 
+            fill="none" stroke="#228B22" stroke-width="8" stroke-linecap="round"/>
+      
+      <!-- Hojas -->
+      <path id="hoja-1" d="M 390 400 Q 360 380 340 390 Q 350 410 380 405 Z" 
+            fill="#32CD32" stroke="#228B22" stroke-width="2" transform-origin="385 400"/>
+      
+      <path id="hoja-2" d="M 410 320 Q 440 300 460 310 Q 450 330 420 325 Z" 
+            fill="#32CD32" stroke="#228B22" stroke-width="2" transform-origin="415 320"/>
+      
+      <!-- Capullos (inicialmente visibles) -->
+      <g id="capullo-1" transform-origin="390 250">
+        <ellipse cx="390" cy="245" rx="8" ry="15" fill="#228B22" opacity="0.8"/>
+        <ellipse cx="390" cy="240" rx="6" ry="12" fill="#FF69B4"/>
+        <path d="M 385 245 Q 390 235 395 245" fill="none" stroke="#DC143C" stroke-width="1"/>
+      </g>
+      
+      <g id="capullo-2" transform-origin="410 180">
+        <ellipse cx="410" cy="175" rx="7" ry="13" fill="#228B22" opacity="0.8"/>
+        <ellipse cx="410" cy="172" rx="5" ry="10" fill="#FF1493"/>
+        <path d="M 406 175 Q 410 167 414 175" fill="none" stroke="#B22222" stroke-width="1"/>
+      </g>
+      
+      <g id="capullo-final" transform-origin="400 100">
+        <ellipse cx="400" cy="95" rx="9" ry="16" fill="#228B22" opacity="0.8"/>
+        <ellipse cx="400" cy="92" rx="7" ry="13" fill="#FF6347"/>
+        <path d="M 394 95 Q 400 85 406 95" fill="none" stroke="#CD5C5C" stroke-width="1"/>
+      </g>
+      
+      <!-- Flores abiertas detalladas (inicialmente ocultas) -->
+      <!-- Flor 1 - Rosa elegante -->
+      <g id="flor-abierta-1" transform-origin="390 250" opacity="0">
+        <!-- Pétalos exteriores -->
+        <path d="M 390 250 Q 370 230 360 245 Q 365 265 385 260 Q 388 255 390 250" fill="#FFB6C1" stroke="#FF69B4" stroke-width="1"/>
+        <path d="M 390 250 Q 410 230 420 245 Q 415 265 395 260 Q 392 255 390 250" fill="#FFB6C1" stroke="#FF69B4" stroke-width="1"/>
+        <path d="M 390 250 Q 375 270 390 285 Q 405 270 390 250" fill="#FFB6C1" stroke="#FF69B4" stroke-width="1"/>
+        <path d="M 390 250 Q 375 235 390 220 Q 405 235 390 250" fill="#FFB6C1" stroke="#FF69B4" stroke-width="1"/>
+        
+        <!-- Pétalos interiores -->
+        <path d="M 390 250 Q 380 240 385 255 Q 390 250 395 255 Q 400 240 390 250" fill="#FFC0CB" stroke="#FF1493" stroke-width="0.5"/>
+        
+        <!-- Centro de la flor -->
+        <circle cx="390" cy="250" r="4" fill="#FFD700"/>
+        <circle cx="390" cy="250" r="2" fill="#FFA500"/>
+        
+        <!-- Estambres -->
+        <circle cx="387" cy="248" r="1" fill="#8B4513"/>
+        <circle cx="393" cy="248" r="1" fill="#8B4513"/>
+        <circle cx="390" cy="253" r="1" fill="#8B4513"/>
+      </g>
+      
+      <!-- Flor 2 - Flor de cerezo -->
+      <g id="flor-abierta-2" transform-origin="410 180" opacity="0">
+        <!-- 5 pétalos simétricos -->
+        <path d="M 410 180 Q 395 165 385 175 Q 395 190 410 180" fill="#FFC0CB" stroke="#FF1493" stroke-width="1"/>
+        <path d="M 410 180 Q 425 165 435 175 Q 425 190 410 180" fill="#FFC0CB" stroke="#FF1493" stroke-width="1"/>
+        <path d="M 410 180 Q 420 200 410 210 Q 400 200 410 180" fill="#FFC0CB" stroke="#FF1493" stroke-width="1"/>
+        <path d="M 410 180 Q 390 185 385 195 Q 400 195 410 180" fill="#FFC0CB" stroke="#FF1493" stroke-width="1"/>
+        <path d="M 410 180 Q 430 185 435 195 Q 420 195 410 180" fill="#FFC0CB" stroke="#FF1493" stroke-width="1"/>
+        
+        <!-- Centro -->
+        <circle cx="410" cy="180" r="3" fill="#FFB6C1"/>
+        <circle cx="410" cy="180" r="1.5" fill="#FF69B4"/>
+        
+        <!-- Estambres delicados -->
+        <line x1="407" y1="178" x2="407" y2="182" stroke="#8B4513" stroke-width="0.5"/>
+        <line x1="413" y1="178" x2="413" y2="182" stroke="#8B4513" stroke-width="0.5"/>
+        <circle cx="407" cy="177" r="0.5" fill="#FFD700"/>
+        <circle cx="413" cy="177" r="0.5" fill="#FFD700"/>
+      </g>
+      
+      <!-- Flor final - Flor espectacular tipo girasol/dalia -->
+      <g id="flor-abierta-final" transform-origin="400 100" opacity="0">
+        <!-- Pétalos exteriores (primera capa) -->
+        <path d="M 400 100 Q 370 70 355 85 Q 370 115 395 105 Q 398 102 400 100" fill="#FFEFD5" stroke="#FF6347" stroke-width="1.5"/>
+        <path d="M 400 100 Q 430 70 445 85 Q 430 115 405 105 Q 402 102 400 100" fill="#FFEFD5" stroke="#FF6347" stroke-width="1.5"/>
+        <path d="M 400 100 Q 420 130 400 145 Q 380 130 400 100" fill="#FFEFD5" stroke="#FF6347" stroke-width="1.5"/>
+        <path d="M 400 100 Q 380 70 400 55 Q 420 70 400 100" fill="#FFEFD5" stroke="#FF6347" stroke-width="1.5"/>
+        
+        <!-- Pétalos diagonales -->
+        <path d="M 400 100 Q 365 75 365 100 Q 385 120 400 100" fill="#FFE4E1" stroke="#FF4500" stroke-width="1"/>
+        <path d="M 400 100 Q 435 75 435 100 Q 415 120 400 100" fill="#FFE4E1" stroke="#FF4500" stroke-width="1"/>
+        <path d="M 400 100 Q 375 125 400 135 Q 425 125 400 100" fill="#FFE4E1" stroke="#FF4500" stroke-width="1"/>
+        <path d="M 400 100 Q 375 75 400 65 Q 425 75 400 100" fill="#FFE4E1" stroke="#FF4500" stroke-width="1"/>
+        
+        <!-- Pétalos interiores (segunda capa) -->
+        <path d="M 400 100 Q 385 90 390 105 Q 400 100 410 105 Q 415 90 400 100" fill="#FFF8DC" stroke="#FF7F50" stroke-width="1"/>
+        <path d="M 400 100 Q 390 115 400 120 Q 410 115 400 100" fill="#FFF8DC" stroke="#FF7F50" stroke-width="1"/>
+        <path d="M 400 100 Q 390 85 400 80 Q 410 85 400 100" fill="#FFF8DC" stroke="#FF7F50" stroke-width="1"/>
+        
+        <!-- Centro grande y detallado -->
+        <circle cx="400" cy="100" r="8" fill="#FFD700"/>
+        <circle cx="400" cy="100" r="6" fill="#FFA500"/>
+        <circle cx="400" cy="100" r="4" fill="#FF8C00"/>
+        
+        <!-- Patrón del centro -->
+        <circle cx="397" cy="97" r="1" fill="#8B4513"/>
+        <circle cx="403" cy="97" r="1" fill="#8B4513"/>
+        <circle cx="400" cy="103" r="1" fill="#8B4513"/>
+        <circle cx="397" cy="103" r="1" fill="#8B4513"/>
+        <circle cx="403" cy="103" r="1" fill="#8B4513"/>
+        
+        <!-- Estambres largos -->
+        <line x1="395" y1="95" x2="395" y2="105" stroke="#654321" stroke-width="0.8"/>
+        <line x1="405" y1="95" x2="405" y2="105" stroke="#654321" stroke-width="0.8"/>
+        <circle cx="395" cy="93" r="1" fill="#FFD700"/>
+        <circle cx="405" cy="93" r="1" fill="#FFD700"/>
+      </g>
+    </svg>
+
+    <!-- Mensaje final del jardín -->
+    <h1 id="final-message" style="opacity: 0;">Y así, todo floreció contigo.</h1>
+
+    <!-- Librería Anime.js -->
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+    
     <!-- Librería p5.js para el fondo de partículas -->
     <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
     <script type="module" src="js/main.js"></script>
